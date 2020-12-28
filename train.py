@@ -5,6 +5,20 @@ import time
 import json
 import logging
 
+# logging
+import torch
+# get tensorboard from torch, not tensorboard library
+from torch.utils.tensorboard import SummaryWriter
+writer = SummaryWriter()
+
+# maybe to reset tensorboard graph
+# import tensorflow as tf
+# tf.reset_default_graph()
+
+## to avoid pytorch warning about parallel execution
+# torch.set_num_threads(1)
+# torch.set_num_interop_threads(1)
+
 from torchmeta.utils.data import BatchMetaDataLoader
 
 from maml.datasets import get_benchmark_by_name
@@ -65,15 +79,21 @@ def main(args):
     # Training loop
     epoch_desc = 'Epoch {{0: <{0}d}}'.format(1 + int(math.log10(args.num_epochs)))
     for epoch in range(args.num_epochs):
-        metalearner.train(meta_train_dataloader,
+        results_metatraining = metalearner.train(meta_train_dataloader,
                           max_batches=args.num_batches,
                           verbose=args.verbose,
                           desc='Training',
                           leave=False)
+        # logging
+        accuracy_before = results_metatraining['accuracies_before']
+        accuracy_before = max(accuracy_before) # if batch_size >1
+
         results = metalearner.evaluate(meta_val_dataloader,
                                        max_batches=args.num_batches,
                                        verbose=args.verbose,
                                        desc=epoch_desc.format(epoch + 1))
+        # logging
+        accuracy_after = results['accuracies_after']
 
         # Save best model
         if 'accuracies_after' in results:
@@ -86,13 +106,22 @@ def main(args):
         else:
             save_model = False
 
+        # logging
+        writer.add_scalar('Accuracy_before', accuracy_before, epoch)
+        writer.add_scalar('Accuracy_after', accuracy_after, epoch)
+
         if save_model and (args.output_folder is not None):
+
             with open(args.model_path, 'wb') as f:
                 torch.save(benchmark.model.state_dict(), f)
 
     if hasattr(benchmark.meta_train_dataset, 'close'):
         benchmark.meta_train_dataset.close()
         benchmark.meta_val_dataset.close()
+
+    # TODO test.py os.path.join(args.output_folder, config.json)
+
+    writer.flush()
 
 
 if __name__ == '__main__':
@@ -153,3 +182,5 @@ if __name__ == '__main__':
         args.num_shots_test = args.num_shots
 
     main(args)
+
+    writer.close()

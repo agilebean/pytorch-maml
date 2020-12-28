@@ -172,10 +172,14 @@ class ModelAgnosticMetaLearning(object):
             for results in self.train_iter(dataloader, max_batches=max_batches):
                 pbar.update(1)
                 postfix = {'loss': '{0:.4f}'.format(results['mean_outer_loss'])}
+
                 if 'accuracies_after' in results:
                     postfix['accuracy'] = '{0:.4f}'.format(
                         np.mean(results['accuracies_after']))
                 pbar.set_postfix(**postfix)
+        # for logging
+        return results
+
 
     def train_iter(self, dataloader, max_batches=500):
         if self.optimizer is None:
