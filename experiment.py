@@ -62,11 +62,11 @@ PARAMETERS = {
 
     ## Optimization parameters
     # Number of tasks in a batch of tasks
-    'batch-size': 1,
+    'batch-size': 2,
     # Number of batch of tasks per epoch
-    'num-batches': 1,
+    'num-batches': 8,
     # Number of epochs of meta-training
-    'num-epochs': 1,
+    'num-epochs': 50,
     # Number of fast adaptation steps, ie. gradient descent updates.
     'num-steps': 1,
     # Size of the fast adaptation step, ie. learning rate in the gradient descent update
@@ -98,8 +98,6 @@ def print_indexed_parameters(parameter_dict):
 
 def execute_experiment(command_list):
     try:
-
-        print(' '.join(command_list[1:]))
 
         tic = time.time()
 
@@ -192,6 +190,7 @@ def create_command_list(parameter_dict, param_select, config_select):
 for CONFIG_SELECT in CONFIG_SELECT_LIST:
     print(CONFIG_SELECT)
     command1 = create_command_list(PARAMETERS, PARAM_SELECT, CONFIG_SELECT)
-    print(command1)
-    execute_experiment(command1)
+    print(' '.join(command1[1:]))
+    time1 = execute_experiment(command1)
+    print(time1 + " seconds")
 
