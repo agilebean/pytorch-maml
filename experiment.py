@@ -50,7 +50,7 @@ PARAMETERS = {
 
     ## General parameters
     # dataset
-    'dataset': 'omniglot',
+    'dataset': 'miniimagenet',
     # output folder
     'output-folder': 'output/',
     # Number of classes per task (N in "N-way", default: 5)
@@ -66,9 +66,9 @@ PARAMETERS = {
     # Number of batch of tasks per epoch
     'num-batches': 8,
     # Number of epochs of meta-training
-    'num-epochs': 50,
+    'num-epochs': 10,
     # Number of fast adaptation steps, ie. gradient descent updates.
-    'num-steps': 1,
+    'num-steps': 1,8
     # Size of the fast adaptation step, ie. learning rate in the gradient descent update
     'step-size': 0.1,
     # Learning rate for the meta-optimizer (optimization of the outer loss
@@ -150,7 +150,7 @@ PARAM_SELECT = parameter_list[PARAM_INPUT-1]
 print(PARAM_SELECT)
 
 
-# user input: erosion kernel size
+# user input: parameter configuration
 while True:
     try:
         CONFIG_INPUT = input("Which parameter configurations? (separate with spaces)> ")

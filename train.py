@@ -35,7 +35,7 @@ def main(args):
             logging.debug('Creating folder `{0}`'.format(args.output_folder))
 
         folder = os.path.join(args.output_folder,
-                              time.strftime('%Y-%m-%d_%H%M%S'))
+                              time.strftime('%Y-%m-%d_%H-%M'))
         os.makedirs(folder)
         logging.debug('Creating folder `{0}`'.format(folder))
 
