@@ -22,7 +22,7 @@ print('current working directory:  ' + BASE_DIR)
 
 if platform.system() != "Darwin":
     import torch
-    print('CUDA available: ' + torch.cuda.is_available())
+    print('CUDA available: ' + str(torch.cuda.is_available()))
 
 DATA_FOLDER = 'data'
 
