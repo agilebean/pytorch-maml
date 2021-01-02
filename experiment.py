@@ -11,9 +11,7 @@ from subprocess import DEVNULL
 from subprocess import CalledProcessError
 import glob
 import time
-import shlex
-import json
-import pathlib
+
 
 # set interpreter
 INTERPRETER=sys.executable
@@ -21,6 +19,10 @@ print("##### python interpreter: " + INTERPRETER)
 
 BASE_DIR = os.getcwd()
 print('current working directory:  ' + BASE_DIR)
+
+if platform.system() != "Darwin":
+    import torch
+    print('CUDA available: ' + torch.cuda.is_available())
 
 DATA_FOLDER = 'data'
 
@@ -62,13 +64,13 @@ PARAMETERS = {
 
     ## Optimization parameters
     # Number of tasks in a batch of tasks
-    'batch-size': 2,
+    'batch-size': 4,
     # Number of batch of tasks per epoch
-    'num-batches': 8,
+    'num-batches': 16,
     # Number of epochs of meta-training
-    'num-epochs': 10,
+    'num-epochs': 1,
     # Number of fast adaptation steps, ie. gradient descent updates.
-    'num-steps': 1,8
+    'num-steps': 1,
     # Size of the fast adaptation step, ie. learning rate in the gradient descent update
     'step-size': 0.1,
     # Learning rate for the meta-optimizer (optimization of the outer loss
@@ -104,16 +106,7 @@ def execute_experiment(command_list):
         process = subprocess.Popen(command_list, shell=False, encoding='utf-8',
                                    stdin=DEVNULL, stdout=subprocess.PIPE)
 
-        if platform.system() == "Darwin":
-            while True:
-                output = process.stdout.readline().strip()
-
-                if output == '' and process.poll() is not None:  # end of output
-                    break
-                if output:  # print output in realtime
-                    print(output)
-        else:
-            (output, error) = process.communicate()
+        (output, error) = process.communicate()
 
         toc = time.time()
         time1 = str(round(toc - tic))

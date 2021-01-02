@@ -11,14 +11,6 @@ import torch
 from torch.utils.tensorboard import SummaryWriter
 writer = SummaryWriter()
 
-# maybe to reset tensorboard graph
-# import tensorflow as tf
-# tf.reset_default_graph()
-
-## to avoid pytorch warning about parallel execution
-# torch.set_num_threads(1)
-# torch.set_num_interop_threads(1)
-
 from torchmeta.utils.data import BatchMetaDataLoader
 
 from maml.datasets import get_benchmark_by_name
@@ -28,14 +20,16 @@ def main(args):
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
     device = torch.device('cuda' if args.use_cuda
                           and torch.cuda.is_available() else 'cpu')
+    print(device)
 
     if (args.output_folder is not None):
         if not os.path.exists(args.output_folder):
             os.makedirs(args.output_folder)
             logging.debug('Creating folder `{0}`'.format(args.output_folder))
 
+        # from logged folder name, inserted dashes
         folder = os.path.join(args.output_folder,
-                              time.strftime('%Y-%m-%d_%H-%M'))
+                              time.strftime('%Y-%m-%d_%H-%M-%S'))
         os.makedirs(folder)
         logging.debug('Creating folder `{0}`'.format(folder))
 
@@ -79,6 +73,7 @@ def main(args):
     # Training loop
     epoch_desc = 'Epoch {{0: <{0}d}}'.format(1 + int(math.log10(args.num_epochs)))
     for epoch in range(args.num_epochs):
+
         results_metatraining = metalearner.train(meta_train_dataloader,
                           max_batches=args.num_batches,
                           verbose=args.verbose,
@@ -126,6 +121,8 @@ def main(args):
 
 if __name__ == '__main__':
     import argparse
+
+    tic = time.time()
 
     parser = argparse.ArgumentParser('MAML')
 
@@ -182,5 +179,9 @@ if __name__ == '__main__':
         args.num_shots_test = args.num_shots
 
     main(args)
+    toc = time.time()
+
+    time1 = toc - tic
+    logging.debug('{0} seconds'.format(str(round(time1))))
 
     writer.close()
