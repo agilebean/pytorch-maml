@@ -20,7 +20,7 @@ def main(args):
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
     device = torch.device('cuda' if args.use_cuda
                           and torch.cuda.is_available() else 'cpu')
-    print(device)
+    logging.info('Starting train.py with: {0}'.format(str(device)))
 
     if (args.output_folder is not None):
         if not os.path.exists(args.output_folder):
@@ -78,7 +78,9 @@ def main(args):
                           max_batches=args.num_batches,
                           verbose=args.verbose,
                           desc='Training',
-                          leave=False)
+                          # leave=False
+                          leave=True
+                          )
         # logging
         accuracy_before = results_metatraining['accuracies_before']
         accuracy_before = max(accuracy_before) # if batch_size >1
@@ -182,6 +184,6 @@ if __name__ == '__main__':
     toc = time.time()
 
     time1 = toc - tic
-    logging.debug('{0} seconds'.format(str(round(time1))))
+    logging.info('End of train.py reached in {0} seconds'.format(str(round(time1))))
 
     writer.close()

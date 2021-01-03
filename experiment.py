@@ -64,9 +64,9 @@ PARAMETERS = {
 
     ## Optimization parameters
     # Number of tasks in a batch of tasks
-    'batch-size': 4,
+    'batch-size': 1,
     # Number of batch of tasks per epoch
-    'num-batches': 16,
+    'num-batches': 2,
     # Number of epochs of meta-training
     'num-epochs': 1,
     # Number of fast adaptation steps, ie. gradient descent updates.
@@ -96,75 +96,6 @@ def print_indexed_parameters(parameter_dict):
     # return output
     return output, param_list
 
-
-
-def execute_experiment(command_list):
-    try:
-
-        tic = time.time()
-
-        process = subprocess.Popen(command_list, shell=False, encoding='utf-8',
-                                   stdin=DEVNULL, stdout=subprocess.PIPE)
-
-        (output, error) = process.communicate()
-
-        toc = time.time()
-        time1 = str(round(toc - tic))
-
-    except CalledProcessError as err:
-        print("CalledProcessError: {0}".format(err))
-        sys.exit(1)
-
-    except OSError as err:
-        print("OS error: {0}".format(err))
-        sys.exit(1)
-
-    except:
-        print("Unexpected error:", sys.exc_info()[0])
-        raise
-
-    return time1
-
-# MAIN
-# user input: parameter to configure
-parameter_index, parameter_list = print_indexed_parameters(PARAMETERS)
-
-while True:
-    try:
-        PARAM_INPUT = int(input(parameter_index))
-
-    except ValueError: # for int conversion, replaces not SyntaxError, NameError (python2)
-        print("No number entered. Please select from the following list:")
-        continue
-    else:
-        break
-
-PARAM_SELECT = parameter_list[PARAM_INPUT-1]
-print(PARAM_SELECT)
-
-
-# user input: parameter configuration
-while True:
-    try:
-        CONFIG_INPUT = input("Which parameter configurations? (separate with spaces)> ")
-        if (PARAM_SELECT == 'step-size' or PARAM_SELECT == 'meta-lr'):
-            datatype = float
-        else:
-            datatype = int
-
-        CONFIG_SELECT_LIST = list(map(datatype, CONFIG_INPUT.split()))
-
-    except ValueError: # for int conversion, replaces not SyntaxError, NameError (python2)
-        print("No number entered. Please select from the following list:")
-        continue
-    else:
-        break
-
-print('*********************************************************************')
-print('You want to experiment the parameter ' + PARAM_SELECT)
-print(' with configurations ' + str(CONFIG_SELECT_LIST))
-print('*********************************************************************')
-
 def create_command_list(parameter_dict, param_select, config_select):
     output = list()
     output.append(INTERPRETER)
@@ -180,10 +111,95 @@ def create_command_list(parameter_dict, param_select, config_select):
 
     return output
 
+def execute_experiment(command_list):
+    try:
+        process = subprocess.Popen(
+            command_list,
+            shell=False,
+            encoding='utf-8',
+            stdout=subprocess.PIPE,
+            # bufsize=0,
+            # stdin=subprocess.DEVNULL,
+            # universal_newlines=True,
+            # stderr=subprocess.PIPE
+        )
+        # Poll process for new output until finished
+        # Source: https://stackoverflow.com/q/37401654/7769076
+        while process.poll() is None:
+            nextline = process.stdout.readline()
+            sys.stdout.write(nextline)
+            # sys.stdout.flush()
+
+    except CalledProcessError as err:
+        print("CalledProcessError: {0}".format(err))
+        sys.exit(1)
+
+    except OSError as err:
+        print("OS error: {0}".format(err))
+        sys.exit(1)
+
+    except:
+        print("Unexpected error:", sys.exc_info()[0])
+        raise
+
+# MAIN
+# user input: parameter to configure
+parameter_index, parameter_list = print_indexed_parameters(PARAMETERS)
+
+while True:
+    # skim parameter input by ENTER
+    PARAM_INPUT = input(parameter_index)
+    if PARAM_INPUT == "":
+      break
+    # check if number
+    try:
+      PARAM_INPUT = int(PARAM_INPUT)
+    except ValueError: # for int conversion, replaces not SyntaxError, NameError (python2)
+        print("No number entered. Please select from the following list:")
+        continue
+    else:
+        break
+
+if (PARAM_INPUT is ""):
+    CONFIG_SELECT_LIST = [1]
+    PARAM_SELECT = 'num-epochs'
+else:
+  PARAM_SELECT = parameter_list[PARAM_INPUT-1]
+  print(PARAM_SELECT)
+
+  # user input: parameter configuration
+  while True:
+      try:
+          CONFIG_INPUT = input("Which parameter configurations? (separate with spaces)> ")
+          if (PARAM_SELECT == 'step-size' or PARAM_SELECT == 'meta-lr'):
+              datatype = float
+          else:
+              datatype = int
+
+          CONFIG_SELECT_LIST = list(map(datatype, CONFIG_INPUT.split()))
+
+      except ValueError: # for int conversion, replaces not SyntaxError, NameError (python2)
+          print("No number entered. Please select from the following list:")
+          continue
+      else:
+          break
+
+  print('*********************************************************************')
+  print('You want to experiment the parameter ' + PARAM_SELECT)
+  print(' with configurations ' + str(CONFIG_SELECT_LIST))
+  print('*********************************************************************')
+
+
 for CONFIG_SELECT in CONFIG_SELECT_LIST:
-    print(CONFIG_SELECT)
+    if (PARAM_INPUT is ""):
+        print("Training default configuration")
+    else:
+        print(CONFIG_SELECT)
+
+    tic = time.time()
     command1 = create_command_list(PARAMETERS, PARAM_SELECT, CONFIG_SELECT)
     print(' '.join(command1[1:]))
-    time1 = execute_experiment(command1)
-    print(time1 + " seconds")
-
+    execute_experiment(command1)
+    toc = time.time()
+    time1 = round(toc - tic)
+    print("Total time elapsed: " + str(time1) + " seconds")
